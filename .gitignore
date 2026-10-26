@@ -1,0 +1,92 @@
+# ============================================================
+# Project Kiru - .gitignore
+# Solo se rastrea código fuente Rust, C++ y Frontend.
+# ============================================================
+
+# --- Herramientas Experimentales y Subproyectos Ignorados ---
+PyInstaller_GUI_Tool/
+pentest_gui/
+Lain Comunism PfP.svg
+Lain pfp.jpeg
+
+# --- Bases de Datos y Fuentes RAG ---
+Rage/
+databases/
+chroma_pentest_db/
+*.sqlite
+*.sqlite3
+*.db
+
+# --- Archivos Python Legacy y Entornos Virtuales ---
+*.py
+*.py[cod]
+*$py.class
+__pycache__/
+requirements.txt
+*.spec
+venv/
+venv2/
+.venv/
+.venv*/
+env/
+ENV/
+*.pyvenv
+.pytest_cache/
+.mypy_cache/
+
+# --- Paquetes Debian y Versiones Posteriores / Compiladas ---
+kiru_*/
+*.deb
+*.rpm
+*.AppImage
+*.tar.gz
+*.zip
+
+# --- Compilados C++ (CMake / GCC / Clang) ---
+build/
+build-cpp/
+build_temp/
+build*/
+cmake-build-*/
+CMakeFiles/
+CMakeCache.txt
+cmake_install.cmake
+**/build/
+**/dist/
+dist/
+*.o
+*.obj
+*.a
+*.so
+*.so.*
+*.dylib
+*.dll
+*.exe
+bin/
+out/
+
+# --- Compilados Rust (Cargo) ---
+target/
+**/*.rs.bk
+
+# --- Experimentos y Archivos Temporales ---
+experiments/
+scratch/
+temp/
+*.tmp
+
+# --- Salidas en Tiempo de Ejecución y Logs ---
+kiru-output/
+logs/
+*.log
+auditoria_md/
+
+# --- Editores y Sistema Operativo ---
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+Cargo.lock

@@ -1,0 +1,803 @@
+<!DOCTYPE html>
+<html lang="es" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kiru AI - Next-Gen AI & Autonomous Sandbox Studio</title>
+    <!-- Auto-detección de ruta base para protocolo file:// y http:// -->
+    <script>
+        if (window.location.protocol === 'file:') {
+            const b = document.createElement('base');
+            b.href = '../';
+            document.head.appendChild(b);
+        }
+    </script>
+    <!-- Recursos 100% Locales y Offline -->
+    <link rel="stylesheet" href="static/vendor/fontawesome/css/all.min.css">
+    <link rel="stylesheet" href="static/vendor/highlight-theme.css">
+    <link rel="stylesheet" href="static/css/style.css?v=5">
+</head>
+<body>
+    <!-- App Container -->
+    <div class="app-layout">
+        <!-- Sidebar Navigation -->
+        <aside id="sidebar" class="sidebar">
+            <div class="sidebar-brand">
+                <div class="brand-logo">
+                    <span class="brand-sparkle">✦</span>
+                    <span class="brand-name">Kiru</span>
+                    <span class="brand-version">v2.0</span>
+                </div>
+                <button id="toggle-sidebar" class="icon-action-btn" title="Ocultar barra lateral">
+                    <i class="fas fa-angles-left"></i>
+                </button>
+            </div>
+
+            <!-- Primary View Navigation Tabs -->
+            <nav class="nav-tabs">
+                <button class="nav-tab active" data-view="chat">
+                    <i class="fas fa-message"></i>
+                    <span>Asistente AI</span>
+                </button>
+                <button class="nav-tab" data-view="models">
+                    <i class="fas fa-cubes"></i>
+                    <span>Modelos & HauhauCS</span>
+                    <span id="models-badge-count" class="tab-badge">0</span>
+                </button>
+                <button class="nav-tab" data-view="sandbox">
+                    <i class="fas fa-terminal"></i>
+                    <span>Sandbox Terminal</span>
+                </button>
+                <button class="nav-tab" data-view="pentest">
+                    <i class="fas fa-shield-halved"></i>
+                    <span>Auditoría & Pentest</span>
+                </button>
+                <button class="nav-tab" data-view="files">
+                    <i class="fas fa-folder-tree"></i>
+                    <span>Archivos Generados</span>
+                    <span id="files-badge-count" class="tab-badge">0</span>
+                </button>
+                <button class="nav-tab" data-view="settings">
+                    <i class="fas fa-sliders"></i>
+                    <span>Configuración</span>
+                </button>
+            </nav>
+
+            <div class="sidebar-divider"></div>
+
+            <!-- Chat Actions & Modes -->
+            <div class="sidebar-section">
+                <button id="new-chat-btn" class="primary-action-btn">
+                    <i class="fas fa-plus"></i>
+                    <span>Nuevo Chat</span>
+                </button>
+            </div>
+
+            <div class="sidebar-section">
+                <div class="section-title">
+                    <i class="fas fa-microchip"></i>
+                    <span>Cerebro Conectado (Ollama)</span>
+                </div>
+                <div class="custom-select-wrapper">
+                    <select id="model-select" class="glass-select">
+                        <option value="">Detectando modelos...</option>
+                    </select>
+                </div>
+                <button id="open-models-hub-btn" class="sidebar-sub-btn" title="Detectar modelos instalados o instalar desde HuggingFace HauhauCS">
+                    <i class="fas fa-cloud-arrow-down text-cyan"></i>
+                    <span>Instalar Modelos HauhauCS</span>
+                </button>
+            </div>
+
+            <div class="sidebar-section">
+                <div class="section-title">
+                    <i class="fas fa-layer-group"></i>
+                    <span>Modo de Operación</span>
+                </div>
+                <div class="mode-grid">
+                    <button class="mode-pill active" data-mode="code" title="Generación y optimización de código con Plan de Ejecución">
+                        <i class="fas fa-code"></i> Código
+                    </button>
+                    <button class="mode-pill" data-mode="sandbox" title="Control Autónomo de Consola en Sandbox con Plan Obligatorio">
+                        <i class="fas fa-terminal"></i> Sandbox
+                    </button>
+                    <button class="mode-pill" data-mode="docs" title="Documentación técnica y manuales">
+                        <i class="fas fa-book"></i> Docs
+                    </button>
+                    <button class="mode-pill" data-mode="general" title="Conversación y asistencia general">
+                        <i class="fas fa-comments"></i> General
+                    </button>
+                </div>
+            </div>
+
+            <!-- Autonomous Console Controls in Sidebar -->
+            <div class="sidebar-section autonomous-sidebar-box">
+                <div class="section-title">
+                    <i class="fas fa-robot text-cyan"></i>
+                    <span>Control Autónomo Sandbox</span>
+                </div>
+                <label class="toggle-row" title="Ejecuta automáticamente en el Sandbox simulado los comandos seguros que incluyan Plan de Ejecución">
+                    <span class="toggle-label"><i class="fas fa-bolt text-cyan"></i> Auto-Ejecución Sandbox</span>
+                    <input type="checkbox" id="auto-exec-toggle" checked>
+                    <span class="toggle-slider"></span>
+                </label>
+                <label class="toggle-row" title="Habilitar uso controlado de superusuario (sudo) bajo advertencia de seguridad">
+                    <span class="toggle-label"><i class="fas fa-user-lock text-amber"></i> Sudo Controlado</span>
+                    <input type="checkbox" id="sudo-control-toggle">
+                    <span class="toggle-slider danger"></span>
+                </label>
+            </div>
+
+            <div class="sidebar-spacer"></div>
+
+            <!-- Sidebar Footer Status -->
+            <div class="sidebar-footer">
+                <div class="system-status-card">
+                    <div class="status-indicator-row">
+                        <span id="status-dot" class="pulsing-dot offline"></span>
+                        <span id="status-text" class="status-label">Conectando...</span>
+                    </div>
+                    <div class="status-details">
+                        <span id="model-name-display" class="status-sub">Ollama Core</span>
+                        <span id="engine-badge-label" class="engine-badge">Rust/C++ Core</span>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Workspace Area -->
+        <main class="main-workspace">
+            <!-- Top App Bar -->
+            <header class="app-header">
+                <div class="header-left">
+                    <button id="open-sidebar" class="icon-action-btn mobile-only" title="Mostrar menú">
+                        <i class="fas fa-bars"></i>
+                    </button>
+                    <div class="view-title-container">
+                        <h2 id="view-title">Asistente AI</h2>
+                        <span id="view-mode-badge" class="badge-mode">MODO CÓDIGO</span>
+                    </div>
+                </div>
+
+                <div class="header-right">
+                    <button id="toggle-embedded-console-btn" class="quick-stat-pill clickable-pill" title="Abrir/Cerrar Consola Sandbox Incrustada">
+                        <i class="fas fa-terminal text-cyan"></i>
+                        <span>Consola Incrustada</span>
+                        <span id="embedded-console-status" class="mini-status-dot online"></span>
+                    </button>
+                    <div class="quick-stat-pill" title="Firewall Anti-Destructivo de Sandbox">
+                        <i class="fas fa-shield-cat text-green"></i>
+                        <span>Firewall: Activo</span>
+                    </div>
+                    <div class="quick-stat-pill" title="Workspace de Sandbox Simulado">
+                        <i class="fas fa-folder-closed text-purple"></i>
+                        <span id="header-workspace-label">/tmp/kiru-sandbox</span>
+                    </div>
+                    <button id="clear-chat-top-btn" class="header-action-btn" title="Limpiar conversación">
+                        <i class="fas fa-trash-can"></i>
+                    </button>
+                </div>
+            </header>
+
+            <!-- Sudo Active Warning Banner (Persistent when Sudo Controlado is enabled) -->
+            <div id="sudo-active-banner" class="sudo-warning-banner" style="display: none;">
+                <i class="fas fa-triangle-exclamation"></i>
+                <div class="sudo-banner-text">
+                    <strong>MODO SUDO CONTROLADO ACTIVO:</strong>
+                    <span id="sudo-banner-exact-text">Darle comandos de superusuario puede resultar en la perdida de archivos importantes, daños, y uso de comandos peligrosos. Solo debe usarse en entorno controlados y comprendiendo por completo los riesgos que puede significar</span>
+                </div>
+                <button id="disable-sudo-banner-btn" class="glass-btn-sm danger-btn">Desactivar Sudo</button>
+            </div>
+
+            <!-- VIEW 1: AI Chat Assistant + Embedded Console Controller -->
+            <section id="view-chat" class="workspace-view active">
+                <div class="chat-split-layout">
+                    <div class="chat-main-column">
+                        <div id="messages" class="messages-container">
+                            <!-- Welcome Hero Screen -->
+                            <div class="welcome-hero" id="welcome-screen">
+                                <div class="hero-avatar-wrapper">
+                                    <img src="assets/apariencia.jpeg" class="hero-avatar" alt="Kiru AI" onerror="this.src='static/img/apariencia.jpeg'">
+                                    <div class="avatar-glow-ring"></div>
+                                </div>
+                                <h1 class="hero-title">Kiru <span class="gradient-accent">Autonomous Studio</span></h1>
+                                <p class="hero-subtitle">Arquitectura incrustada de control autónomo de consola en Sandbox simulado con Firewall anti-destructivo y planificación obligatoria de ejecución.</p>
+
+                                <!-- Quick Action Chips -->
+                                <div class="hero-chips">
+                                    <button class="prompt-chip" data-prompt="Prepara un Plan de Ejecución Autónomo para inspeccionar la arquitectura del sistema, memoria disponible y puertos abiertos en el Sandbox.">
+                                        <i class="fas fa-clipboard-check"></i>
+                                        <span>Plan Autónomo de Diagnóstico en Sandbox</span>
+                                    </button>
+                                    <button class="prompt-chip" data-prompt="Analiza el sistema local en busca de configuraciones SUID vulnerables y binarios LOLBAS preparando un plan claro con las herramientas requeridas.">
+                                        <i class="fas fa-shield-virus"></i>
+                                        <span>Auditoría SUID & Plan de Herramientas</span>
+                                    </button>
+                                    <button class="prompt-chip" data-prompt="Escribe un servidor TCP concurrente en Rust con Tokio y manejo robusto de errores.">
+                                        <i class="fab fa-rust"></i>
+                                        <span>Servidor Concurrente en Rust</span>
+                                    </button>
+                                    <button class="prompt-chip" data-prompt="Implementa un cliente HTTP con libcurl y parsing JSON en C++20.">
+                                        <i class="fas fa-c"></i>
+                                        <span>Cliente C++20 con libcurl</span>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Chat Input Floating Bar -->
+                        <div class="chat-input-container">
+                            <div class="chat-input-box">
+                                <textarea id="message-input"
+                                    placeholder="Pide a Kiru ejecutar una tarea en consola (el cerebro preparará un Plan de Ejecución con Objetivo, Herramientas y Comando)..."
+                                    rows="1"
+                                    autofocus></textarea>
+
+                                <div class="input-controls">
+                                    <span id="char-count" class="char-counter">0 chars</span>
+                                    <button id="send-btn" class="send-action-btn" disabled title="Enviar mensaje (Enter)">
+                                        <i class="fas fa-arrow-up"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="input-footnote">
+                                <span><kbd>Enter</kbd> enviar · Plan de Ejecución Obligatorio · Firewall Anti-Destructivo Activo · <a href="#" id="quick-open-models-link" class="footnote-link">Instalar modelos HauhauCS</a></span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Embedded Autonomous Console Drawer (Arquitectura Incrustada de Control de Consola) -->
+                    <aside id="embedded-console-drawer" class="embedded-console-drawer open">
+                        <div class="embedded-console-header">
+                            <div class="embedded-header-title">
+                                <i class="fas fa-terminal text-cyan"></i>
+                                <span>Consola Autónoma Incrustada (Sandbox)</span>
+                            </div>
+                            <div class="embedded-header-actions">
+                                <button id="embedded-clear-btn" class="icon-action-btn-sm" title="Limpiar registro"><i class="fas fa-eraser"></i></button>
+                                <button id="embedded-close-btn" class="icon-action-btn-sm" title="Minimizar panel"><i class="fas fa-xmark"></i></button>
+                            </div>
+                        </div>
+
+                        <!-- Execution Plan Requirement Notice -->
+                        <div class="embedded-plan-policy">
+                            <div class="policy-badge-row">
+                                <span class="policy-pill safe"><i class="fas fa-shield-halved"></i> Sandbox Simulado</span>
+                                <span class="policy-pill plan"><i class="fas fa-list-check"></i> Plan Obligatorio</span>
+                                <span id="embedded-sudo-pill" class="policy-pill sudo-off"><i class="fas fa-lock"></i> Sudo: OFF</span>
+                            </div>
+                            <p class="policy-desc">
+                                El cerebro conectado está obligado a declarar <strong>Comando</strong>, <strong>Objetivo / Fin</strong> y <strong>Herramientas Requeridas</strong>. Comandos destructivos (<code>rm -rf /</code>, <code>mkfs</code>, <code>dd</code>, etc.) son bloqueados por el Firewall.
+                            </p>
+                        </div>
+
+                        <!-- Active Execution Plan Card -->
+                        <div id="embedded-plan-card" class="embedded-plan-card">
+                            <div class="plan-card-header">
+                                <i class="fas fa-brain text-purple"></i>
+                                <span>Último Plan de Ejecución & Herramientas</span>
+                            </div>
+                            <div id="embedded-plan-body" class="plan-card-body">
+                                <span class="text-muted">Esperando instrucciones o comando autónomo del cerebro IA...</span>
+                            </div>
+                        </div>
+
+                        <!-- Embedded Console Live Output -->
+                        <div id="embedded-terminal-output" class="embedded-terminal-output">
+                            <div class="terminal-line system-msg">[Kiru Embedded Sandbox v2.0] Entorno aislado listo en /tmp/kiru-sandbox</div>
+                            <div class="terminal-line system-msg">[Firewall] Protección contra borrado del sistema y comandos dañinos activa.</div>
+                        </div>
+
+                        <!-- Embedded Quick Command Input -->
+                        <div class="embedded-input-row">
+                            <span class="embedded-prompt">$</span>
+                            <input type="text" id="embedded-cmd-input" placeholder="Probar comando en Sandbox (ej. uname -a o rm -rf /)..." autocomplete="off">
+                            <button id="embedded-run-btn" class="glass-btn-sm text-cyan" title="Validar con Firewall y Ejecutar">
+                                <i class="fas fa-play"></i>
+                            </button>
+                        </div>
+                    </aside>
+                </div>
+            </section>
+
+            <!-- VIEW 2: Detector de Modelos Instalados & Instalador HuggingFace HauhauCS -->
+            <section id="view-models" class="workspace-view">
+                <div class="models-dashboard">
+                    <div class="pentest-header-banner">
+                        <div>
+                            <h2><i class="fas fa-cubes text-cyan"></i> Detector de Modelos & Catálogo Oficial HauhauCS (Ollama)</h2>
+                            <p>Gestiona tus modelos instalados localmente e instala modelos GGUF sin censura directamente desde <a href="https://huggingface.co/HauhauCS" target="_blank" rel="noopener" class="external-link">huggingface.co/HauhauCS <i class="fas fa-arrow-up-right-from-square"></i></a></p>
+                        </div>
+                        <button id="refresh-models-btn" class="primary-gradient-btn">
+                            <i class="fas fa-rotate"></i>
+                            <span>Detectar Modelos Instalados</span>
+                        </button>
+                    </div>
+
+                    <div class="models-grid-layout">
+                        <!-- Panel Izquierdo: Instalador HauhauCS con Lista Desplegable de Requerimientos -->
+                        <div class="details-panel hauhau-installer-panel">
+                            <div class="panel-header">
+                                <h3><i class="fas fa-download text-cyan"></i> Instalar Modelo de HuggingFace (HauhauCS) vía Ollama</h3>
+                                <span class="badge-mode">RECOMENDADOS ARRIBA</span>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="hauhau-model-select">Selecciona un modelo del repositorio <strong>HauhauCS</strong> (Ordenados con los recomendados hasta arriba):</label>
+                                <select id="hauhau-model-select" class="glass-select hauhau-select-lg">
+                                    <option value="">Cargando catálogo de https://huggingface.co/HauhauCS...</option>
+                                </select>
+                            </div>
+
+                            <!-- Hardware Requirements Spec Card for Selected Model -->
+                            <div id="hauhau-spec-card" class="hauhau-spec-card">
+                                <div class="spec-card-top">
+                                    <div>
+                                        <span id="spec-rec-badge" class="rec-badge">⭐ MODELO RECOMENDADO</span>
+                                        <h4 id="spec-model-name">Qwen 3.5 4B Uncensored (Aggressive)</h4>
+                                        <code id="spec-ollama-tag" class="spec-tag-code">hf.co/HauhauCS/Qwen3.5-4B-Uncensored-HauhauCS-Aggressive:Q4_K_M</code>
+                                    </div>
+                                    <a id="spec-hf-link" href="https://huggingface.co/HauhauCS/Qwen3.5-4B-Uncensored-HauhauCS-Aggressive" target="_blank" rel="noopener" class="glass-btn-sm">
+                                        <i class="fas fa-up-right-from-square"></i> Ver en HF
+                                    </a>
+                                </div>
+
+                                <p id="spec-model-desc" class="spec-description">
+                                    Equilibrio ideal entre velocidad, razonamiento autónomo de consola, generación de planes técnicos y bajo consumo de memoria.
+                                </p>
+
+                                <!-- Hardware Requirements Grid (CPU, RAM, VRAM, SSD) -->
+                                <div class="hw-reqs-grid">
+                                    <div class="hw-req-box">
+                                        <div class="hw-req-icon"><i class="fas fa-hard-drive text-cyan"></i></div>
+                                        <div>
+                                            <span class="hw-req-label">Espacio en Disco (SSD)</span>
+                                            <strong id="spec-ssd">2.7 GB</strong>
+                                        </div>
+                                    </div>
+                                    <div class="hw-req-box">
+                                        <div class="hw-req-icon"><i class="fas fa-memory text-purple"></i></div>
+                                        <div>
+                                            <span class="hw-req-label">Memoria RAM Necesaria</span>
+                                            <strong id="spec-ram">6 GB RAM mínimo (8 GB rec.)</strong>
+                                        </div>
+                                    </div>
+                                    <div class="hw-req-box">
+                                        <div class="hw-req-icon"><i class="fas fa-tv text-green"></i></div>
+                                        <div>
+                                            <span class="hw-req-label">Tarjeta Gráfica (VRAM)</span>
+                                            <strong id="spec-vram">3.5 GB VRAM (o 100% CPU/iGPU)</strong>
+                                        </div>
+                                    </div>
+                                    <div class="hw-req-box">
+                                        <div class="hw-req-icon"><i class="fas fa-microchip text-amber"></i></div>
+                                        <div>
+                                            <span class="hw-req-label">Procesador (CPU)</span>
+                                            <strong id="spec-cpu">4 núcleos (Intel i5 / Ryzen 5 / Apple M1+)</strong>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Target Equipment Compatibility Box -->
+                                <div class="hw-equipment-banner">
+                                    <div class="hw-eq-title"><i class="fas fa-laptop-code text-cyan"></i> ¿En qué tipo de equipos corre este modelo?</div>
+                                    <p id="spec-hardware">Laptops estándar, Mini PCs, equipos de gama media con GPU integrada o dedicada básica (GTX 1650 / RTX 3050).</p>
+                                </div>
+
+                                <!-- Install Action & Progress Bar -->
+                                <div class="hauhau-install-actions">
+                                    <button id="install-hauhau-btn" class="primary-gradient-btn">
+                                        <i class="fas fa-cloud-arrow-down"></i>
+                                        <span>Instalar Modelo con Ollama</span>
+                                    </button>
+                                    <button id="copy-ollama-cmd-btn" class="glass-btn" title="Copiar comando para terminal">
+                                        <i class="fas fa-terminal"></i>
+                                        <span>Copiar comando CLI</span>
+                                    </button>
+                                </div>
+
+                                <!-- Pull Progress Container -->
+                                <div id="pull-progress-container" class="pull-progress-container" style="display: none;">
+                                    <div class="pull-progress-header">
+                                        <span id="pull-status-text">Iniciando descarga desde HuggingFace / Ollama...</span>
+                                        <span id="pull-percent-text">0%</span>
+                                    </div>
+                                    <div class="pull-progress-bar-bg">
+                                        <div id="pull-progress-bar-fill" class="pull-progress-bar-fill" style="width: 0%;"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Panel Derecho: Detector de Modelos Instalados Localmente -->
+                        <div class="details-panel installed-models-panel">
+                            <div class="panel-header">
+                                <h3><i class="fas fa-circle-check text-green"></i> Modelos Instalados Detectados en tu Equipo</h3>
+                                <span id="installed-count-pill" class="lang-pill">0 detectados</span>
+                            </div>
+                            <p class="help-text">Modelos detectados automáticamente en tu servidor local de Ollama (<code>/api/tags</code>). Haz clic en <strong>Conectar Cerebro</strong> para usarlo en Kiru.</p>
+
+                            <div id="installed-models-list" class="installed-models-list">
+                                <div class="text-center text-muted" style="padding: 24px;">Buscando modelos instalados en Ollama...</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Tabla Comparativa Completa de Modelos HauhauCS -->
+                    <div class="details-panel">
+                        <div class="panel-header">
+                            <h3><i class="fas fa-table-list text-purple"></i> Guía Comparativa de Requerimientos — Modelos HuggingFace HauhauCS</h3>
+                            <span class="help-text">Los 3 modelos recomendados se muestran al principio de la tabla</span>
+                        </div>
+                        <div class="suid-table-container">
+                            <table class="glass-table">
+                                <thead>
+                                    <tr>
+                                        <th>Modelo (HauhauCS)</th>
+                                        <th>Parámetros</th>
+                                        <th>Disco (SSD)</th>
+                                        <th>RAM</th>
+                                        <th>VRAM</th>
+                                        <th>CPU</th>
+                                        <th>Tipo de Equipo Ideal</th>
+                                        <th>Acción</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="hauhau-comparison-tbody">
+                                    <tr><td colspan="8" class="text-center text-muted">Cargando catálogo...</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- VIEW 3: Pentest & Security Hub -->
+            <section id="view-pentest" class="workspace-view">
+                <div class="pentest-dashboard">
+                    <div class="pentest-header-banner">
+                        <div>
+                            <h2><i class="fas fa-shield-halved text-cyan"></i> Centro de Auditoría de Seguridad Ofensiva</h2>
+                            <p>Evaluación local de vectores de escalada de privilegios, inspección de kernel, permisos SUID y catálogo LOLBAS.</p>
+                        </div>
+                        <button id="run-audit-btn" class="primary-gradient-btn">
+                            <i class="fas fa-play"></i>
+                            <span>Ejecutar Auditoría Completa</span>
+                        </button>
+                    </div>
+
+                    <!-- Audit Metrics Grid -->
+                    <div class="audit-metrics-grid">
+                        <div class="metric-card" id="metric-euid-card">
+                            <div class="metric-icon"><i class="fas fa-user-shield"></i></div>
+                            <div class="metric-info">
+                                <span class="metric-label">Estado EUID / Root</span>
+                                <h3 id="metric-euid-val">Verificando...</h3>
+                                <p id="metric-euid-desc" class="metric-sub">Privilegios actuales del proceso</p>
+                            </div>
+                        </div>
+
+                        <div class="metric-card" id="metric-sudo-card">
+                            <div class="metric-icon"><i class="fas fa-key"></i></div>
+                            <div class="metric-info">
+                                <span class="metric-label">Escalada Sudo</span>
+                                <h3 id="metric-sudo-val">Comprobando...</h3>
+                                <p id="metric-sudo-desc" class="metric-sub">Permisos sudo -n -l</p>
+                            </div>
+                        </div>
+
+                        <div class="metric-card" id="metric-suid-card">
+                            <div class="metric-icon"><i class="fas fa-file-shield"></i></div>
+                            <div class="metric-info">
+                                <span class="metric-label">Binarios SUID</span>
+                                <h3 id="metric-suid-val">0</h3>
+                                <p class="metric-sub">Encontrados en /usr/bin y /bin</p>
+                            </div>
+                        </div>
+
+                        <div class="metric-card" id="metric-kernel-card">
+                            <div class="metric-icon"><i class="fas fa-microchip"></i></div>
+                            <div class="metric-info">
+                                <span class="metric-label">Versión de Kernel</span>
+                                <h3 id="metric-kernel-val">Linux</h3>
+                                <p id="metric-kernel-desc" class="metric-sub">Arquitectura x86_64</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Audit Details Tabs -->
+                    <div class="audit-details-section">
+                        <div class="details-panel">
+                            <div class="panel-header">
+                                <h3><i class="fas fa-terminal"></i> Binarios con Bit SUID Detectados</h3>
+                                <input type="text" id="suid-search" class="glass-input-sm" placeholder="Filtrar binarios...">
+                            </div>
+                            <div class="suid-table-container">
+                                <table class="glass-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Ruta del Binario</th>
+                                            <th>Permisos</th>
+                                            <th>Riesgo LOLBAS</th>
+                                            <th>Acción</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="suid-table-body">
+                                        <tr><td colspan="4" class="text-center text-muted">Ejecuta la auditoría para inspeccionar binarios SUID</td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <div class="details-panel">
+                            <div class="panel-header">
+                                <h3><i class="fas fa-network-wired"></i> Interfaces de Red & Conectividad</h3>
+                            </div>
+                            <div id="interfaces-list" class="interfaces-grid">
+                                <p class="text-muted">Cargando interfaces de red...</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- VIEW 4: Artifacts & Output Manager -->
+            <section id="view-files" class="workspace-view">
+                <div class="files-dashboard">
+                    <div class="files-header-banner">
+                        <div>
+                            <h2><i class="fas fa-folder-open text-purple"></i> Gestor de Archivos & Código Extraído</h2>
+                            <p>Código generado automáticamente por Kiru y guardado en tu directorio de trabajo.</p>
+                        </div>
+                        <div class="files-actions">
+                            <button id="refresh-files-btn" class="glass-btn">
+                                <i class="fas fa-rotate"></i> Actualizar
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Files Stats Strip -->
+                    <div class="files-stats-strip">
+                        <div class="stat-item">
+                            <span class="stat-num" id="stat-total-files">0</span>
+                            <span class="stat-text">Archivos Totales</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-num" id="stat-total-size">0 KB</span>
+                            <span class="stat-text">Espacio en Disco</span>
+                        </div>
+                        <div class="stat-item" style="flex: 2;">
+                            <span class="stat-text" style="margin-bottom: 6px;">Distribución de Lenguajes</span>
+                            <div id="stat-lang-chips" class="lang-chips-row">
+                                <span class="lang-pill">Sin datos</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Files Grid Table -->
+                    <div class="files-table-wrapper">
+                        <table class="glass-table">
+                            <thead>
+                                <tr>
+                                    <th>Nombre del Archivo</th>
+                                    <th>Lenguaje</th>
+                                    <th>Tamaño</th>
+                                    <th>Última Modificación</th>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody id="artifacts-table-body">
+                                <tr><td colspan="5" class="text-center text-muted">No hay archivos generados aún</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- VIEW 5: Sandbox Terminal Console -->
+            <section id="view-sandbox" class="workspace-view">
+                <div class="sandbox-terminal-layout">
+                    <div class="terminal-header-bar">
+                        <div class="terminal-window-buttons">
+                            <span class="win-btn red"></span>
+                            <span class="win-btn yellow"></span>
+                            <span class="win-btn green"></span>
+                        </div>
+                        <div class="terminal-title">
+                            <i class="fas fa-terminal"></i> Kiru Isolated Sandbox Console — <span id="terminal-working-dir">/tmp/kiru-sandbox</span>
+                        </div>
+                        <div style="display:flex; align-items:center; gap:10px;">
+                            <span id="sandbox-sudo-indicator" class="policy-pill sudo-off">Sudo: Desactivado</span>
+                            <button id="clear-terminal-btn" class="icon-action-btn-sm" title="Limpiar consola">
+                                <i class="fas fa-eraser"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Quick Command Chips + Firewall Test Chip -->
+                    <div class="terminal-presets-bar">
+                        <span class="presets-label">Comandos Rápidos:</span>
+                        <button class="cmd-chip" data-cmd="id && whoami && pwd">id && whoami && pwd</button>
+                        <button class="cmd-chip" data-cmd="uname -a">uname -a</button>
+                        <button class="cmd-chip" data-cmd="ip a || ifconfig">ip a</button>
+                        <button class="cmd-chip" data-cmd="ls -la">ls -la</button>
+                        <button class="cmd-chip" data-cmd="find /usr/bin -perm -4000 2>/dev/null | head -n 15">find SUID (top 15)</button>
+                        <button class="cmd-chip danger-chip" data-cmd="rm -rf / --no-preserve-root" title="Probar que el Firewall bloquea comandos dañinos">🛡️ Probar Firewall (rm -rf /)</button>
+                    </div>
+
+                    <!-- Terminal Output Window -->
+                    <div id="terminal-screen" class="terminal-screen">
+                        <div class="terminal-line system-msg">
+                            [Kiru Sandbox v2.0] Entorno simulado aislado listo. Firewall anti-destructivo activo (prohibido borrar el sistema, formatear discos o ejecutar fork bombs).
+                        </div>
+                    </div>
+
+                    <!-- Terminal Prompt Input -->
+                    <div class="terminal-input-bar">
+                        <span class="terminal-prompt-sym">kiru@sandbox:~$</span>
+                        <input type="text" id="terminal-cmd-input" placeholder="Introduce comando bash (comandos destructivos serán bloqueados)..." autocomplete="off">
+                        <button id="terminal-run-btn" class="primary-gradient-btn-sm">
+                            <i class="fas fa-play"></i> Ejecutar
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- VIEW 6: Settings & Config -->
+            <section id="view-settings" class="workspace-view">
+                <div class="settings-container">
+                    <div class="settings-header">
+                        <h2><i class="fas fa-sliders text-cyan"></i> Configuración del Sistema & Seguridad del Sandbox</h2>
+                        <p>Ajustes de conexión a Ollama, rutas del sistema, control de superusuario (sudo) y lanzadores rápidos.</p>
+                    </div>
+
+                    <div class="settings-cards-grid">
+                        <!-- Card 1: Directorios -->
+                        <div class="settings-card">
+                            <div class="card-title">
+                                <i class="fas fa-folder-gear"></i>
+                                <span>Rutas & Directorios</span>
+                            </div>
+                            <div class="form-group">
+                                <label for="setting-output-dir">Carpeta de Salida para Código Extraído:</label>
+                                <div class="input-with-button">
+                                    <input type="text" id="setting-output-dir" class="glass-input" placeholder="~/Documentos/Kiru-Output">
+                                    <button class="save-setting-btn" data-key="output_dir" data-input="setting-output-dir">
+                                        <i class="fas fa-save"></i> Guardar
+                                    </button>
+                                </div>
+                                <span class="help-text">Directorio donde se guardarán automáticamente los scripts generados.</span>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="setting-sandbox-dir">Directorio de Trabajo Sandbox Simulado:</label>
+                                <div class="input-with-button">
+                                    <input type="text" id="setting-sandbox-dir" class="glass-input" placeholder="/tmp/kiru-sandbox">
+                                    <button class="save-setting-btn" data-key="sandbox_dir" data-input="setting-sandbox-dir">
+                                        <i class="fas fa-save"></i> Guardar
+                                    </button>
+                                </div>
+                                <span class="help-text">Directorio aislado donde Kiru ejecuta comandos de terminal de forma autónoma.</span>
+                            </div>
+                        </div>
+
+                        <!-- Card 2: Ollama Connection & Sudo Password -->
+                        <div class="settings-card">
+                            <div class="card-title">
+                                <i class="fas fa-server"></i>
+                                <span>Conexión con Ollama & Sudo Controlado</span>
+                            </div>
+                            <div class="form-group">
+                                <label for="setting-ollama-host">URL del Servidor Ollama:</label>
+                                <div class="input-with-button">
+                                    <input type="text" id="setting-ollama-host" class="glass-input" placeholder="http://localhost:11434">
+                                    <button class="save-setting-btn" data-key="ollama_host" data-input="setting-ollama-host">
+                                        <i class="fas fa-save"></i> Guardar
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="setting-sudo-password">Contraseña de Sesión para Sudo Controlado (Opcional, solo en memoria):</label>
+                                <input type="password" id="setting-sudo-password" class="glass-input" placeholder="Contraseña para sudo -S (cuando Sudo Controlado esté activo)">
+                                <span class="help-text">Nunca se guarda en disco. Solo se usa si autorizas explícitamente Sudo Controlado.</span>
+                            </div>
+                            <div class="form-group">
+                                <button id="test-connection-btn" class="glass-btn">
+                                    <i class="fas fa-plug"></i> Probar Conexión con Ollama
+                                </button>
+                                <span id="test-connection-status" class="status-msg"></span>
+                            </div>
+                        </div>
+
+                        <!-- Card 3: Quick Launchers Info -->
+                        <div class="settings-card full-width">
+                            <div class="card-title">
+                                <i class="fas fa-rocket"></i>
+                                <span>Lanzadores Rápidos Multiplataforma (Probar sin Compilar) & Arquitectura</span>
+                            </div>
+                            <div class="specs-grid">
+                                <div class="spec-box">
+                                    <span class="spec-label">Linux / macOS (.sh)</span>
+                                    <code class="spec-value text-cyan">./kiru-quick.sh</code>
+                                </div>
+                                <div class="spec-box">
+                                    <span class="spec-label">Windows PowerShell (.ps1)</span>
+                                    <code class="spec-value text-purple">.\kiru-quick.ps1</code>
+                                </div>
+                                <div class="spec-box">
+                                    <span class="spec-label">Windows CMD (.cmd)</span>
+                                    <code class="spec-value text-green">kiru-quick.cmd</code>
+                                </div>
+                                <div class="spec-box">
+                                    <span class="spec-label">macOS Finder / DMG</span>
+                                    <code class="spec-value text-amber">launchers/kiru-macos.dmg.sh</code>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Sudo Controlled Security Warning Modal (Exact Required Warning Text) -->
+    <div id="sudo-modal" class="modal-overlay">
+        <div class="modal-content sudo-modal-box">
+            <div class="modal-header sudo-modal-header">
+                <div class="modal-title-row">
+                    <i class="fas fa-triangle-exclamation text-amber" style="font-size: 20px;"></i>
+                    <h3>Advertencia de Seguridad — Uso Controlado de Superusuario (Sudo)</h3>
+                </div>
+                <button id="sudo-modal-close-btn" class="icon-action-btn-sm"><i class="fas fa-xmark"></i></button>
+            </div>
+            <div class="modal-body sudo-modal-body">
+                <div class="sudo-exact-warning-box">
+                    <p id="sudo-modal-warning-text">
+                        Darle comandos de superusuario puede resultar en la perdida de archivos importantes, daños, y uso de comandos peligrosos. Solo debe usarse en entorno controlados y comprendiendo por completo los riesgos que puede significar
+                    </p>
+                </div>
+                <p class="sudo-modal-subtext">
+                    Aunque el Firewall del Sandbox de Kiru sigue bloqueando comandos destructivos críticos (como <code>rm -rf /</code>, <code>mkfs</code> o <code>dd</code>), habilitar <code>sudo</code> otorga privilegios elevados a los comandos autorizados.
+                </p>
+                <div class="form-group" style="margin-top: 12px;">
+                    <label for="sudo-modal-password">Contraseña de sudo para sesión controlada (opcional si tu usuario tiene NOPASSWD):</label>
+                    <input type="password" id="sudo-modal-password" class="glass-input" placeholder="Introduce contraseña sudo de sesión...">
+                </div>
+                <div class="sudo-modal-actions">
+                    <button id="sudo-cancel-btn" class="glass-btn">Cancelar (Mantener Seguro)</button>
+                    <button id="sudo-confirm-btn" class="primary-gradient-btn danger-gradient-btn">
+                        <i class="fas fa-shield-exclamation"></i> Comprendo los riesgos, habilitar Sudo Controlado
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Code Preview Modal -->
+    <div id="code-modal" class="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="modal-title-row">
+                    <i class="fas fa-file-code text-cyan"></i>
+                    <h3 id="modal-filename">snippet.txt</h3>
+                </div>
+                <div class="modal-actions">
+                    <button id="modal-copy-btn" class="glass-btn-sm"><i class="fas fa-copy"></i> Copiar</button>
+                    <button id="modal-close-btn" class="icon-action-btn-sm"><i class="fas fa-xmark"></i></button>
+                </div>
+            </div>
+            <div class="modal-body">
+                <pre><code id="modal-code-body" class="hljs"></code></pre>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notifications Container -->
+    <div id="toast-container" class="toast-container"></div>
+
+    <!-- Scripts 100% Locales y Offline -->
+    <script src="static/vendor/marked.min.js"></script>
+    <script src="static/vendor/highlight.min.js"></script>
+    <script src="static/js/app.js?v=5"></script>
+</body>
+</html>
